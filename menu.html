@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu | The Bat Cave Cafe</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <style>
+        /* --- SHARED STYLES --- */
+        :root {
+            --bg-color: #070606;
+            --card-bg: #0f0f0e;
+            --text-color: #F6EDD9;
+            --accent-gold: #D4AF37;
+            --accent-gold-strong: #E8C76A;
+            --light-text: #9AA4B2;
+            --footer-bg: #050506;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Background Image */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background: url('media/bg-image.png') no-repeat center center/cover;
+            filter: blur(8px) brightness(0.4);
+            transform: scale(1.05); 
+        }
+        
+        a { text-decoration: none; transition: 0.3s; color: var(--text-color); }
+        ul { list-style: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* =========================================
+           NAVIGATION (Responsive)
+           ========================================= */
+        nav {
+            position: fixed; 
+            top: 0; left: 0; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px 0;
+            background: transparent; 
+            min-height: 96px;
+            z-index: 1000; 
+            border-bottom: none;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-links {
+            pointer-events: auto;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            gap: 15px; 
+            align-items: center;
+            justify-content: center;
+            padding: 8px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 3;
+            flex-wrap: nowrap;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-links li { 
+            display: flex; align-items: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 200px; opacity: 1;
+        }
+
+        .nav-links li a {
+            position: relative; color: var(--accent-gold); font-weight: 600;
+            padding: 8px 16px; border-radius: 999px;
+            border: 1px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap; font-size: 0.95rem;
+        }
+
+        .nav-links li a:not(.logo-item a):hover,
+        .nav-links li a:not(.logo-item a).active {
+            transform: translateY(-2px);
+            color: var(--white);
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .logo-item { width: 140px; height: 60px; position: relative; display: flex; justify-content: center; align-items: center; margin: 0 10px; }
+        .logo-item a { padding: 0 !important; background: transparent !important; border: none !important; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        
+        .center-logo { 
+            width: 160px; height: auto; position: absolute; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            object-fit: contain; z-index: 10; 
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6)); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Responsive Nav */
+        @media (max-width: 900px) {
+            nav { pointer-events: auto; flex-direction: column; padding: 10px; }
+            .nav-links { 
+                width: 95%; 
+                justify-content: flex-start; 
+                overflow-x: auto; 
+                padding: 10px 20px; 
+                border-radius: 15px; 
+                background: rgba(0,0,0,0.8);
+            }
+            .nav-links::-webkit-scrollbar { display: none; }
+            .logo-item { min-width: 100px; }
+            .center-logo { width: 100px; }
+            
+            nav.scrolled .nav-links li:not(.logo-item) { max-width: 200px; opacity: 1; pointer-events: auto; }
+            nav.scrolled .nav-links { background: rgba(0,0,0,0.8); padding: 10px 20px; gap: 15px; width: 95%; }
+        }
+
+        /* =========================================
+           PAGE CONTENT STYLES
+           ========================================= */
+        .page-header { margin-top: 180px; text-align: center; margin-bottom: 4rem; position: relative; z-index: 2; }
+        .page-header h1 { font-size: 4rem; color: var(--accent-gold); font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        .page-header p { color: var(--light-text); font-size: 1rem; max-width: 600px; margin: 0 auto; line-height: 1.6; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+
+        @media (max-width: 600px) {
+            .page-header { margin-top: 140px; }
+            .page-header h1 { font-size: 2.5rem; }
+        }
+
+        /* CONTENT PANELS */
+        .content-panel {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('media/bg-featured.png');
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 50px 30px; 
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .content-panel.plain {
+            background: rgba(10, 10, 10, 0.8); 
+            backdrop-filter: blur(20px);
+            padding: 30px 15px; /* Reduced padding for mobile */
+        }
+
+        /* =========================================
+           FEATURED SWIPER STYLES (Mobile Optimized)
+           ========================================= */
+        .swiper { 
+            width: 100%; 
+            padding-top: 40px; 
+            padding-bottom: 80px; 
+            overflow: visible !important; 
+        }
+        
+        .swiper-slide {
+            width: 300px; height: 400px; 
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0.4; 
+            transform: scale(0.85); 
+            filter: blur(3px);
+            z-index: 10;
+        }
+        
+        .swiper-slide-active { 
+            opacity: 1; 
+            transform: scale(1.1); 
+            z-index: 50; 
+            filter: none; 
+        }
+
+        .featured-card {
+            background: transparent; 
+            border: none;
+            box-shadow: none;
+            border-radius: 15px; 
+            height: 100%;
+            display: flex; flex-direction: column; 
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            width: 100%; 
+            overflow: visible;
+        }
+        
+        .featured-img-container {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent;
+            position: relative;
+            transition: all 0.4s ease; 
+        }
+        
+        .featured-img { 
+            max-height: 100%; max-width: 100%; width: auto; 
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6));
+            transition: transform 0.4s ease;
+            object-fit: contain;
+            transform: scale(1.1);
+        }
+
+        .featured-content { 
+            padding: 0; text-align: center; flex-grow: 0; 
+            display: flex; flex-direction: column; justify-content: center;
+            position: relative;
+            background: transparent;
+            transition: all 0.4s ease;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        /* DESKTOP HOVER EFFECT ONLY */
+        @media (min-width: 900px) {
+            .swiper-slide-active:hover .featured-card {
+                background-color: #151515; 
+                border: 1px solid var(--accent-gold);
+                box-shadow: 0 0 50px rgba(0,0,0,0.9);
+                width: 480px; 
+                margin-left: -90px;
+                flex-direction: row; 
+                transform: scale(1.02);
+                z-index: 1000; 
+                height: 100%;
+                border-radius: 20px;
+            }
+
+            .swiper-slide-active:hover .featured-img-container {
+                width: 45%; 
+                height: 100%; 
+                background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(0,0,0,0) 80%);
+                border-right: 1px solid rgba(255,255,255,0.05);
+            }
+            
+            .swiper-slide-active:hover .featured-img {
+                transform: scale(0.85);
+                filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+            }
+
+            .swiper-slide-active:hover .featured-content {
+                width: 55%; 
+                height: 100%;
+                opacity: 1;
+                padding: 20px;
+                text-align: left;
+                align-items: flex-start;
+            }
+            .featured-details { display: block; opacity: 1; }
+        }
+
+        /* MOBILE OVERRIDES for Featured Card */
+        @media (max-width: 899px) {
+             .featured-content {
+                 height: auto;
+                 opacity: 1;
+                 padding-top: 10px;
+             }
+             .featured-title { font-size: 1.1rem; }
+             .featured-sub { font-size: 0.7rem; }
+             .featured-details { display: none; } /* Hide details on mobile to fit card */
+             .swiper-slide { width: 260px; height: 350px; }
+        }
+
+        .featured-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.3rem; color: var(--white); margin-bottom: 5px; }
+        .featured-sub { font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;}
+        .featured-details { max-height: 200px; color: #ccc; font-size: 0.85rem; line-height: 1.5; }
+        
+        .swiper-button-next, .swiper-button-prev { color: var(--accent-gold); transition: all 0.3s; opacity: 0.7; }
+
+        /* =========================================
+           UNIQUE SIGNATURES SECTION
+           ========================================= */
+        .signature-showcase {
+            position: relative;
+            width: 100%;
+            min-height: 600px;
+            padding: 4rem 1.5rem;
+            margin-bottom: 4rem;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        /* Video Background Layer */
+        .signature-video-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            filter: brightness(0.4) contrast(1.1) blur(2px);
+        }
+
+        .signature-content { position: relative; z-index: 2; width: 100%; max-width: 1200px; }
+
+        .signature-header { text-align: center; margin-bottom: 3rem; }
+        .signature-header h2 {
+            font-family: 'Montserrat', sans-serif; font-size: 3rem; font-weight: 800;
+            color: var(--white); text-transform: uppercase; letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); margin-bottom: 0.5rem;
+        }
+        .signature-header .gold-line {
+            width: 80px; height: 4px; background: var(--accent-gold);
+            margin: 0 auto; box-shadow: 0 0 10px var(--accent-gold);
+        }
+
+        .sig-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; justify-content: center; }
+
+        .sig-card {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 30px;
+            position: relative;
+            overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+
+        .sig-img-box {
+            width: 100%; height: 220px;
+            display: flex; justify-content: center; align-items: center;
+            margin-bottom: 20px; position: relative;
+        }
+
+        .sig-img {
+            max-height: 100%; width: auto; z-index: 1;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.8));
+        }
+
+        .sig-title { font-family: 'Montserrat', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--white); margin-bottom: 5px; }
+        .sig-price { font-size: 1.25rem; color: var(--accent-gold); font-weight: 700; margin-bottom: 15px; display: block; }
+        .sig-desc { color: #bbb; font-size: 0.9rem; margin-bottom: 20px; }
+
+        /* =========================================
+           PASTRIES & GRID STYLES (Mobile Optimized)
+           ========================================= */
+        /* Changed minmax to 260px to fit smaller phones (like iPhone SE) without overflowing */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        
+        .menu-item { background: rgba(15, 15, 15, 0.6); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .item-img { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(0,0,0,0) 70%); }
+        .item-img img { max-height: 85%; width: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6)); }
+        .item-content { padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .item-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--white); }
+        .item-price { color: var(--accent-gold); font-weight: 700; font-size: 1.1rem; }
+        .item-desc { color: var(--light-text); font-size: 0.85rem; line-height: 1.5; }
+        
+        .add-btn { background-color: var(--accent-gold); color: #000; border: none; padding: 10px 15px; font-weight: 700; cursor: pointer; border-radius: 8px; margin-top: 15px; width: 100%; transition: 0.3s; }
+
+        .section-title { font-size: 2.2rem; color: var(--white); text-align: center; margin-bottom: 3rem; font-family: 'Montserrat', sans-serif; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 5; }
+        .category-header-container { display: flex; align-items: center; margin-bottom: 2rem; }
+        .category-title { font-size: 2rem; color: var(--white); border-left: 4px solid var(--accent-gold); padding-left: 15px; font-family: 'Montserrat', sans-serif; font-weight: 700; }
+        .category-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); margin-left: 20px; }
+        
+        /* Mobile Typography adjustments */
+        @media (max-width: 600px) {
+            .section-title { font-size: 1.8rem; }
+            .category-title { font-size: 1.5rem; }
+            .signature-header h2 { font-size: 2rem; }
+            .content-panel { padding: 30px 15px; }
+        }
+
+        footer { background-color: var(--footer-bg); padding: 3rem 0; margin-top: 4rem; text-align: center; color: var(--light-text); border-top: 1px solid rgba(255,255,255,0.05); }
+        
+        .badge { position: absolute; top: 0; left: 0; background: var(--accent-gold); color: #000; padding: 5px 15px; font-size: 0.8rem; font-weight: 700; border-radius: 0 0 10px 0; z-index: 5; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <ul class="nav-links">
+            <li><a href="menu.html" class="active">Menu</a></li>
+            <li><a href="index.html#about">About Us</a></li>
+            
+            <li class="logo-item">
+                <a href="index.html">
+                    <img src="media/logo.png" class="center-logo" alt="Batcave Logo">
+                </a>
+            </li>
+
+           <li><a href="booking.html">Book Room</a></li>
+            <li><a href="index.html#faqs">FAQs</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h1>Our Menu</h1>
+            <p>Crafted with passion, brewed for the night owls. Explore our selection of premium roasts and midnight snacks.</p>
+        </header>
+
+        <div class="content-panel">
+            <section id="featured">
+                <h2 class="section-title">FEATURED FAVORITES</h2>
+                <p style="text-align: center; color: var(--light-text); margin-top: -30px; margin-bottom: 40px; font-size: 0.9rem;">
+                    Swipe to explore. Click to order!
+                </p>
+
+                <div class="swiper mySwiper">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide">
+                            <div class="featured-card">
+                                <div class="badge">Bestseller</div>
+                                <div class="featured-img-container">
+                                    <img src="media/Bat_Cave_Cafe__The_Bat_Brew_-removebg-preview.png" class="featured-img" alt="Bat Brew">
+                                </div>
+                                <div class="featured-content">
+                                    <div>
+                                        <h3 class="featured-title">The Bat Brew</h3>
+                                        <p class="featured-sub">Signature Charcoal Roast</p>
+                                        <div class="featured-details">
+                                            <div class="ratings">★★★★★ (4.9)</div>
+                                            <p>Our legendary house blend. Deep, smoky charcoal notes with a smooth dark chocolate finish.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="swiper-slide">
+                            <div class="featured-card">
+                                <div class="badge">Popular</div>
+                                <div class="featured-img-container">
+                                    <img src="media/Bat_Cave_Cafe__Midnight_Mocha_-removebg-preview.png" class="featured-img" alt="Midnight Mocha" style="filter: hue-rotate(180deg) drop-shadow(0 20px 30px rgba(0,0,0,0.6));">
+                                </div>
+                                <div class="featured-content">
+                                    <div>
+                                        <h3 class="featured-title">Midnight Mocha</h3>
+                                        <p class="featured-sub">Dark Chocolate Espresso</p>
+                                        <div class="featured-details">
+                                            <div class="ratings">★★★★☆ (4.7)</div>
+                                            <p>A rich blend of Belgian dark chocolate and robust espresso, topped with whipped cream.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="swiper-slide">
+                            <div class="featured-card">
+                                <div class="featured-img-container">
+                                    <img src="media/Bat_Cave_Cafe__Red_Velvet_Muffin_-removebg-preview.png" class="featured-img" alt="Red Velvet Muffin">
+                                </div>
+                                <div class="featured-content">
+                                    <div>
+                                        <h3 class="featured-title">Red Velvet Muffin</h3>
+                                        <p class="featured-sub">With Cream Cheese Core</p>
+                                        <div class="featured-details">
+                                            <div class="ratings">★★★★★ (4.8)</div>
+                                            <p>Moist red velvet crumb concealing a decadent cream cheese center. Perfectly sweet.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="swiper-slide">
+                            <div class="featured-card">
+                                <div class="featured-img-container">
+                                    <img src="media/Bat_Cave_Cafe__Joker_s_Mocha_Frappuccino_-removebg-preview.png" class="featured-img" alt="Joker's Frappe">
+                                </div>
+                                <div class="featured-content">
+                                    <div>
+                                        <h3 class="featured-title">Joker's Frappe</h3>
+                                        <p class="featured-sub">Chaotic Sweet Blend</p>
+                                        <div class="featured-details">
+                                            <div class="ratings">★★★★☆ (4.6)</div>
+                                            <p>A wild mix of matcha, mocha, and strawberry syrup. Unexpectedly delicious chaos.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+            </section>
+        </div>
+
+        <section class="signature-showcase">
+            <video class="signature-video-bg" autoplay loop muted playsinline poster="media/bg-featured.png">
+                <source src="media/coffee_cinematic.mp4" type="video/mp4">
+            </video>
+
+            <div class="signature-content">
+                <div class="signature-header">
+                    <h2>Signatures</h2>
+                    <div class="gold-line"></div>
+                </div>
+
+                <div class="sig-grid">
+                    <div class="sig-card">
+                        <div class="sig-img-box">
+                            <img src="media/Bat Cave Cafe (Chilled Bat Latte).png" alt="Chilled Bat Latte" class="sig-img">
+                        </div>
+                        <h3 class="sig-title">Chilled Bat Latte</h3>
+                        <span class="sig-price">₱135</span>
+                        <p class="sig-desc">Cold brew steeped for 24hrs, finished with a splash of vanilla and heavy cream.</p>
+                        <button class="add-btn">Add to Order</button>
+                    </div>
+
+                    <div class="sig-card">
+                        <div class="sig-img-box">
+                            <img src="media/Bat Cave Cafe (Cave Dweller Americano).png" alt="Cave Dweller" class="sig-img">
+                        </div>
+                        <h3 class="sig-title">Cave Dweller</h3>
+                        <span class="sig-price">₱110</span>
+                        <p class="sig-desc">Strong, no-nonsense hot americano. The fuel for deep focus.</p>
+                        <button class="add-btn">Add to Order</button>
+                    </div>
+                    
+                    <div class="sig-card">
+                        <div class="sig-img-box">
+                            <img src="media/Bat Cave Cafe (Vigilante Espresso Shot).png" alt="Vigilante Shot" class="sig-img">
+                        </div>
+                        <h3 class="sig-title">Vigilante Shot</h3>
+                        <span class="sig-price">₱90</span>
+                        <p class="sig-desc">A double espresso shot. Pure, undiluted energy for the night.</p>
+                        <button class="add-btn">Add to Order</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="content-panel plain">
+            <section class="menu-category">
+                <div class="category-header-container">
+                    <h2 class="category-title">Pastries & Snacks</h2>
+                    <div class="category-line"></div>
+                </div>
+                <div class="menu-grid">
+                     <div class="menu-item">
+                        <div class="item-img"><img src="media/Bat Cave Cafe (Guano Chocolate Croissant).png" alt="Croissant"></div>
+                        <div class="item-content">
+                            <div class="item-header"><h3 class="item-title">Choco Croissant</h3><span class="item-price">₱95</span></div>
+                            <p class="item-desc">Buttery pastry filled with rich dark chocolate.</p>
+                            <button class="add-btn">Add to Order</button>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="item-img"><img src="media/Bat Cave Cafe (Grapnel Berry Scone).png" alt="Scone"></div>
+                        <div class="item-content">
+                            <div class="item-header"><h3 class="item-title">Berry Scone</h3><span class="item-price">₱80</span></div>
+                            <p class="item-desc">Freshly baked scone with wild berries.</p>
+                            <button class="add-btn">Add to Order</button>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="item-img"><img src="media/Bat Cave Cafe (Batwing Cheesy Garlic Breadsticks).png" alt="Breadsticks"></div>
+                        <div class="item-content">
+                            <div class="item-header"><h3 class="item-title">Garlic Batwings</h3><span class="item-price">₱110</span></div>
+                            <p class="item-desc">Cheesy garlic breadsticks twisted like bat wings.</p>
+                            <button class="add-btn">Add to Order</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 The Malvar Bat Cave Cafe.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        var swiper = new Swiper(".mySwiper", {
+            effect: "coverflow",
+            grabCursor: true,
+            centeredSlides: true,
+            slidesPerView: "auto",
+            loop: true, 
+            loopedSlides: 5, 
+            spaceBetween: 50, 
+            coverflowEffect: {
+                rotate: 0,
+                stretch: 0,
+                depth: 100, 
+                modifier: 1,
+                slideShadows: false,
+            },
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+        });
+
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+    </script>
+</body>
+</html>

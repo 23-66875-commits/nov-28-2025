@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batcave Cafe - Reservations</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bat: { 950: '#050505', 900: '#0a0a0a', 800: '#121212', 700: '#1c1c1c' },
+                        gold: { 400: '#E8C76A', 500: '#D4AF37', 600: '#b5932a' },
+                        green: { 500: '#10b981' } // Added for modals
+                    },
+                    fontFamily: {
+                        serif: ['"Montserrat"', 'sans-serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CORE VARIABLES */
+        :root { 
+            --accent-gold: #D4AF37; 
+            --white: #ffffff;
+        }
+
+        body {
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000 70%);
+            min-height: 100vh;
+            color: #e5e7eb;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #070606; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 4px; }
+
+        /* --- GENERAL INPUT STYLES (Added textarea here) --- */
+        input, select, textarea { 
+            background-color: rgba(255, 255, 255, 0.05); 
+            border: 1px solid #333;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #D4AF37;
+            background-color: rgba(0, 0, 0, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 1px #D4AF37;
+        }
+
+        
+
+        /* --- NEW: Invalid Input Style --- */
+        input:invalid:not(:placeholder-shown):not(:focus),
+        select:invalid:not(:placeholder-shown):not(:focus),
+        .input-invalid { 
+            border-color: #EF4444 !important; /* Tailwind's red-500 */
+            box-shadow: 0 0 0 1px #EF4444 !important;
+        }
+        
+        /* --- CALENDAR SPECIFIC STYLES --- */
+        input[type="date"] {
+            background-color: rgba(255, 255, 255, 0.05);  
+            border: 1px solid var(--accent-gold); 
+            color: #fff;
+            color-scheme: dark; 
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.8;
+            cursor: pointer;
+        }
+        
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =========================================
+           NAVIGATION STYLES
+           ========================================= */
+        nav {
+            position: fixed; 
+            top: 0; left: 0; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px 0;
+            background: transparent; 
+            min-height: 96px;
+            z-index: 1000; 
+            border-bottom: none;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-links {
+            pointer-events: auto;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            gap: 15px; 
+            align-items: center;
+            justify-content: center;
+            padding: 8px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 3;
+            flex-wrap: nowrap;
+        }
+
+        .nav-links li { 
+            display: flex; align-items: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 200px; opacity: 1;
+        }
+
+        .nav-links li a {
+            position: relative;
+            color: var(--accent-gold);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+
+        .nav-links li a:not(.logo-item a):hover,
+        .nav-links li a:not(.logo-item a).active {
+            transform: translateY(-2px);
+            color: var(--white);
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        /* Logo Styles */
+        .logo-item { width: 140px; height: 60px; position: relative; display: flex; justify-content: center; align-items: center; margin: 0 10px; }
+        .logo-item a { padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        .center-logo { width: 160px; height: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: contain; z-index: 10; background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6)); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .center-logo:hover { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 25px rgba(212, 175, 55, 0.7)); cursor: pointer; }
+
+        /* Stealth Scroll */
+        .nav-links { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        nav.scrolled .nav-links { background: transparent; border-color: transparent; box-shadow: none; gap: 0; padding: 8px 0; width: fit-content; }
+        nav.scrolled .nav-links li:not(.logo-item) { max-width: 0; opacity: 0; padding: 0; margin: 0; pointer-events: none; }
+        nav.scrolled .center-logo { filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.2)); transform: translate(-50%, -50%) scale(0.8); }
+        nav.scrolled .nav-links:hover { background: rgba(255, 255, 255, 0.055); border: 1px solid rgba(255, 253, 253, 0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.5); gap: 15px; padding: 8px 40px; backdrop-filter: blur(12px) saturate(120%); }
+        nav.scrolled .nav-links:hover li:not(.logo-item) { max-width: 200px; opacity: 1; pointer-events: auto; }
+        nav.scrolled .nav-links:hover .center-logo { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.7)); transform: translate(-50%, -50%) scale(1); }
+        nav.scrolled .center-logo:hover { filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 25px rgba(212, 175, 55, 0.7)); transform: translate(-50%, -50%) scale(1.15); }
+
+        @media (max-width: 900px) {
+            nav { pointer-events: auto; flex-direction: column; padding: 10px; }
+            .nav-links { width: 100%; justify-content: flex-start; overflow-x: auto; padding: 10px 20px; border-radius: 15px; }
+            .nav-links::-webkit-scrollbar { display: none; }
+            .logo-item { min-width: 100px; }
+            .center-logo { width: 100px; }
+        }
+        
+        /* Tab Pill Container */
+        .tab-pill-container {
+            background: #000; border: 1px solid #D4AF37;
+            border-radius: 999px; padding: 4px;
+            display: inline-flex; gap: 0;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+        
+        .tab-btn {
+            padding: 0.6rem 2rem; border-radius: 999px;
+            font-weight: 700; font-size: 0.95rem; transition: all 0.3s;
+            color: #D4AF37;
+        }
+        
+        .tab-btn.active { background-color: #D4AF37; color: #000; }
+        .tab-btn:not(.active):hover { color: #fff; }
+
+        /* Split Layout Styles */
+        .sanctum-container {
+            display: flex; flex-direction: column;
+            background: #0a0a0a; border-radius: 30px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        @media (min-width: 1024px) { .sanctum-container { flex-direction: row; min-height: 650px; } }
+
+        .left-panel {
+            position: relative;
+            background-image: url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1947&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; padding: 3rem;
+        }
+
+        .left-panel::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.4));
+        }
+
+        .right-panel {
+            padding: 2rem; background: rgba(15, 15, 15, 0.95);
+            display: flex; flex-direction: column; justify-content: center;
+        }
+
+        .form-label { color: #9ca3af; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem; display: block; }
+        
+        /* Checkbox */
+        input[type="checkbox"] {
+            accent-color: #D4AF37; width: 1rem; height: 1rem;
+            background-color: #0f0f0f; border: 1px solid #555; cursor: pointer;
+        }
+
+        /* Fee Box */
+        .fee-box {
+            border: 1px solid #D4AF37; border-radius: 12px;
+            background: rgba(212, 175, 55, 0.05); padding: 1.5rem;
+            text-align: center; margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-spin {
+            animation: spin 2s linear infinite;
+        }
+
+        /* ADD THIS NEW RULE TO THE <style> BLOCK */
+        .modal-open {
+            overflow: hidden; /* Hides the main scrollbar when the modal is active */
+       }
+    </style>
+</head>
+<body class="flex flex-col items-center font-sans">
+
+    <nav>
+        <ul class="nav-links">
+            <li><a href="menu.html">Menu</a></li>
+            <li><a href="index.html#about">About Us</a></li>
+            
+            <li class="logo-item">
+                <a href="index.html">
+                    <img src="media/logo.png" class="center-logo" alt="Batcave Logo" onerror="this.src='https://images.unsplash.com/photo-1517585356942-8c886e92701b?auto=format&fit=crop&q=80&w=200'">
+                </a>
+            </li>
+
+            <li><a href="booking.html" class="active">Book Room</a></li>
+            <li><a href="index.html#faqs">FAQs</a></li>
+        </ul>
+    </nav>
+
+    <main class="w-full max-w-7xl px-4 mt-36 mb-20 fade-in">
+        
+        <div class="sanctum-container">
+            
+            <div class="left-panel lg:w-5/12">
+                <div class="relative z-10 text-white">
+                    <div class="mb-6">
+                        <span class="text-gold-500 font-bold tracking-[0.3em] text-sm uppercase block mb-2">The Sanctum</span>
+                        <h1 class="font-serif text-5xl md:text-6xl font-bold leading-tight">
+                            Reserve Your<br><span class="text-gold-500">Space</span>
+                        </h1>
+                    </div>
+                    <p class="text-gray-300 leading-relaxed mb-8 max-w-md">
+                        Escape the noise. Immerse yourself in a focused environment tailored for deep work, study, or intimate gatherings.
+                    </p>
+                    
+                    <div class="flex gap-4 text-gold-500">
+                        <div class="flex items-center gap-2"><i class="fas fa-wifi"></i> <span class="text-xs font-bold uppercase">Fiber Wifi</span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-plug"></i> <span class="text-xs font-bold uppercase">Power</span></div>
+                        <div class="flex items-center gap-2"><i class="fas fa-mug-hot"></i> <span class="text-xs font-bold uppercase">Artisan Coffee</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel lg:w-7/12">
+    
+                <div class="flex justify-center mb-8">
+                    <div class="tab-pill-container">
+                        <button onclick="switchTab('study')" id="tab-study" class="tab-btn active">Study Room</button>
+                        <button onclick="switchTab('event')" id="tab-event" class="tab-btn">Event Reservation</button>
+                    </div>
+                </div>
+
+                <div id="studyWrapper" class="block fade-in">
+                    <div class="text-center mb-6">
+                        <h2 class="font-serif text-3xl font-bold text-white mb-1">Book a Study Room</h2>
+                        <p class="text-gray-500 text-xs tracking-widest uppercase">Focus • Energize • Productivity</p>
+                    </div>
+
+                    <form id="studyForm" onsubmit="handleStudyReservation(event)" class="space-y-5" novalidate>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Name<span class="text-gold-500">*</span></label>
+                                <input type="text" id="Name" required placeholder="e.g. Nina Sy" class="w-full rounded-lg px-4 py-3 text-sm placeholder-gray-600 text-gray-300">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Start Time</label>
+                                    <input type="time" id="studyTime" value="13:00" onchange="calcStudyFee()" class="w-full rounded-lg px-4 py-3 text-sm text-center">
+                                </div>
+                                <div class="relative">
+                                    <label class="form-label">End Time</label>
+                                    <input type="time" id="studyEndTime" value="15:00" onchange="calcStudyFee()" class="w-full rounded-lg px-4 py-3 text-sm text-center">
+                                    <p id="timeError" class="text-red-500 text-[10px] mt-1 hidden font-bold absolute -bottom-5 left-0 w-full whitespace-nowrap">Invalid duration</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label class="form-label">Reservation Date</label>
+                                <input type="date" id="studyDate" required class="w-full rounded-lg px-4 py-3 text-sm" min="2025-12-12">
+                            </div>
+                            <div>
+                                <label class="form-label">Contact Email <span class="text-gold-500">*</span></label>
+                                <input type="email" id="studyEmail" required placeholder="ninasy@gmail.com" class="w-full rounded-lg px-4 py-3 text-sm placeholder-gray-600">
+                            </div>
+                        </div>                 
+                        
+                        <div class="mt-4">
+                            <label class="form-label">Special Notes / Requests</label>
+                            <textarea id="studyNotes" rows="3" placeholder="Any allergies or specific requirements?" class="w-full rounded-lg px-4 py-3 text-sm placeholder-gray-600 resize-none"></textarea>
+                        </div>
+
+                        <div class="fee-box mt-6">
+                            <span class="block text-gray-400 text-xs font-medium uppercase tracking-widest mb-1">Total Fee</span>
+                            <div class="text-4xl font-serif font-bold text-gold-500">
+                                PHP <span id="studyTotal">700</span>
+                            </div>
+                            <div id="durationLabel" class="text-gray-500 text-xs mt-1">2 hrs</div>
+                        </div>
+
+                        <div class="flex items-start gap-3 mt-6 p-4 bg-gold-500/5 border border-gold-500/20 rounded-lg">
+                            <input type="checkbox" id="studyAgree" required class="mt-1">
+                            <label for="studyAgree" class="text-xs text-gray-400 cursor-pointer">
+                                I agree to the <span class="text-gold-500 font-bold underline cursor-pointer" onclick="openTermsModal(event)">Terms and Conditions</span> and acknowledge that reservations are subject to availability and admin approval.
+                            </label>
+                        </div>
+
+                        <button type="submit" id="studySubmitBtn"
+                            class="w-full py-4 rounded-full bg-gold-500 text-black font-bold text-sm tracking-wider uppercase hover:bg-gold-400 transform transition hover:-translate-y-1 shadow-lg shadow-gold-500/20">
+                            Review & Submit Booking
+                        </button>
+                    </form>
+                </div>
+
+                <div id="eventWrapper" class="hidden fade-in">
+                    <div class="text-center mb-6">
+                        <h2 class="font-serif text-3xl font-bold text-white mb-1">Event Reservation</h2>
+                        <p class="text-gold-500 text-xs tracking-widest uppercase">Celebrate • Gather • Party</p>
+                    </div>
+
+                    <form id="eventForm" onsubmit="handleEventReservation(event)" class="space-y-5" novalidate>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">              
+                            <div>
+                                <label class="form-label">Contact Name</label>
+                                <input type="text" id="eventContactName" required placeholder="e.g. Nina Sy" class="w-full rounded-lg px-4 py-3 text-sm placeholder-gray-600 text-gray-300">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Start Time</label>
+                                    <input type="time" id="eventStartTime" value="13:00" onchange="calcEventFee()" class="w-full rounded-lg px-4 py-3 text-sm text-center">
+                                </div>
+                                <div class="relative">
+                                    <label class="form-label">End Time</label>
+                                    <input type="time" id="eventEndTime" value="15:00" onchange="calcEventFee()" class="w-full rounded-lg px-4 py-3 text-sm text-center">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Event Type</label>
+                                <select id="eventType" required class="w-full rounded-lg px-4 py-3 text-sm appearance-none">
+                                    <option value="" disabled selected>Select Event Type</option>
+                                    <option>Birthday Party</option>
+                                    <option>Org Meeting</option>
+                                    <option>Reunion</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">No. of Guests</label>
+                                <input type="number" id="guestCount" min="1" max="20" value="5" onchange="calcEventFee()" class="w-full rounded-lg px-4 py-3 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div>
+                                <label class="form-label">Event Date</label>
+                                <input type="date" id="eventDate" required class="w-full rounded-lg px-4 py-3 text-sm" min="2025-12-12">
+                            </div>
+
+                            <div>
+                                <label class="form-label">Contact Email</label>
+                                <input type="email" id="eventEmail" placeholder="ninasy@gmail.com" required class="w-full rounded-lg px-4 py-3 text-sm placeholder-gray-600">
+                            </div>
+                        </div>                    
+
+                        <div class="border border-dashed border-gray-700 rounded-xl p-4 mt-2">
+                            <label class="form-label text-gold-500 mb-2">Equipment</label>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white text-sm">
+                                    <input type="checkbox" id="projector" onchange="calcEventFee()">
+                                    Projector (+PHP 150/hr)
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white text-sm">
+                                    <input type="checkbox" id="mic" onchange="calcEventFee()">
+                                    Microphone and speaker (+PHP 150/hr)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="form-label">Special Notes / Requests</label>
+                            <textarea id="eventNotes" rows="3" placeholder="Describe your event setup needs..." class="w-full rounded-lg px-4 py-3 text-sm placeholder-gray-600 resize-none"></textarea>
+                        </div>
+
+                        <div class="fee-box mt-6">
+                            <span class="block text-gray-400 text-xs font-medium uppercase tracking-widest mb-1">Estimated Event Total</span>
+                            <div class="text-4xl font-serif font-bold text-gold-500">
+                                PHP <span id="eventTotal">3000</span>
+                            </div>
+                            <div id="eventDurationLabel" class="text-gray-500 text-xs mt-1">2 hrs</div>
+                            <div class="text-gray-500 text-[10px] mt-1">Base Venue: PHP 1,000 </div>
+                        </div>
+
+                        <div class="flex items-start gap-3 mt-6 p-4 bg-gold-500/5 border border-gold-500/20 rounded-lg">
+                            <input type="checkbox" id="eventAgree" required class="mt-1">
+                            <label for="eventAgree" class="text-xs text-gray-400 cursor-pointer">
+                                I agree to the <span class="text-gold-500 font-bold underline cursor-pointer" onclick="openTermsModal(event)">Terms and Conditions</span> and acknowledge that reservations are subject to availability and admin approval.
+                            </label>
+                        </div>
+                        
+                        <button type="submit" id="eventSubmit" class="w-full py-4 rounded-full bg-gold-500 text-black font-bold text-sm tracking-wider uppercase hover:bg-gold-400 transform transition hover:-translate-y-1 shadow-lg shadow-gold-500/20">
+                            Review & Submit Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="w-full p-6 text-center text-gray-500 text-sm">
+        <p>
+            For cancellations or modifications, please <a href="index.html" class="text-gold-500 font-bold underline hover:text-white">contact us here</a>.
+        </p>
+        <p class="mt-1 text-xs">&copy; 2025 The Malvar Bat Cave Cafe.</p>
+    </footer>
+
+    <div id="summaryModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black bg-opacity-95 transition-opacity" onclick="closeSummaryModal()"></div>
+
+            <div class="bg-bat-800 border border-gold-500 rounded-2xl overflow-hidden shadow-2xl shadow-gold-500/20 transform transition-all max-w-lg w-full relative z-10 p-8">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-serif font-bold text-gold-500" id="summaryTitle"></h2>
+                    <p class="text-gray-400 text-sm">Please review your reservation details before submitting.</p>
+                </div>
+                
+                <div id="summaryDetails" class="text-left text-gray-300 space-y-3 mb-8 border border-gray-700 p-4 rounded-lg text-sm">
+                    </div>
+                
+                <div class="fee-box mt-6">
+                    <span class="block text-gray-400 text-xs font-medium uppercase tracking-widest mb-1">Total Fee</span>
+                    <div class="text-4xl font-serif font-bold text-gold-500">
+                        PHP <span id="summaryTotal">0</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="closeSummaryModal()" class="flex-1 py-3 border border-gray-600 rounded-full text-white font-bold text-sm tracking-wider uppercase hover:bg-gray-700 transition">
+                        Edit
+                    </button>
+                    <button onclick="submitBooking()" id="confirmSubmitBtn" class="flex-1 py-3 rounded-full bg-gold-500 text-black font-bold text-sm tracking-wider uppercase hover:bg-gold-400 transform transition">
+                        Confirm & Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="termsModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black bg-opacity-95 transition-opacity" onclick="closeTermsModal()"></div>
+            
+            <div class="bg-bat-800 border border-gold-500 rounded-2xl overflow-hidden shadow-2xl shadow-gold-500/20 transform transition-all max-w-2xl w-full relative z-10 p-8 max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-serif font-bold text-gold-500">Terms and Conditions</h2>
+                    <button onclick="closeTermsModal()" class="text-gray-400 hover:text-gold-500 text-2xl">&times;</button>
+                </div>
+                
+                <div class="text-gray-300 space-y-6 text-sm leading-relaxed">
+                    <div>
+                        <h3 class="text-lg font-bold text-gold-500 mb-3">Information We Collect</h3>
+                        <p class="mb-2">We may collect the following types of information when you interact with our website:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-2">
+                            <li><strong>Personal Information:</strong> Such as your name, email address, phone number, and order/reservation details when you fill out forms or place an order for our subterranean treats.</li>
+                            <li><strong>Payment Information:</strong> When applicable, secure payment details are processed through trusted third-party providers; we do not store payment information on our servers.</li>
+                            <li><strong>Usage Data:</strong> Including your IP address, browser type, referring website, and how you navigate and interact with our dark corners of the web (our site).</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-gold-500 mb-3">How We Use Your Information</h3>
+                        <p class="mb-2">We use your information to:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-2">
+                            <li>Process and fulfill orders and reservations for the Bat Cave experience.</li>
+                            <li>Respond to customer service inquiries (or signals from the Bat-Signal).</li>
+                            <li>Send updates, newsletters, or promotions (only with your express consent).</li>
+                            <li>Improve our website and user experience.</li>
+                            <li>Comply with legal obligations.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-gold-500 mb-3">Sharing Your Information</h3>
+                        <p class="mb-2">We do not sell your personal information. We may share your data with:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-2">
+                            <li>Trusted third-party service providers (e.g., secure payment processors, delivery services for our dark wares).</li>
+                            <li>Legal authorities if required by law or to protect our rights.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="successModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black bg-opacity-95 transition-opacity" onclick="closeModal()"></div>
+            
+            <div class="bg-bat-800 border border-gold-500 rounded-2xl overflow-hidden shadow-2xl shadow-gold-500/20 transform transition-all max-w-md w-full relative z-10 p-6">
+                <div class="text-center">
+                    <div id="modalIcon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gold-500/20 mb-4">
+                        <i class="fas fa-check text-2xl text-gold-500"></i>
+                    </div>
+                    <h3 id="modalTitle" class="text-2xl font-serif font-bold text-white mb-2">Received!</h3>
+                    <div id="modalDetails" class="text-gray-300 mb-6 text-sm"></div>
+                    <div id="modalButtons"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loadingModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black bg-opacity-95 transition-opacity"></div>
+            <div class="bg-bat-800 border border-gold-500 rounded-2xl overflow-hidden shadow-2xl shadow-gold-500/20 max-w-xs w-full relative z-10 p-6 text-center">
+                <i class="fas fa-clock text-4xl text-gold-500 mb-4 animate-pulse"></i>
+                <h3 class="text-xl font-serif font-bold text-white">Request Sent!</h3>
+                <p class="text-gray-400 text-sm">Waiting for Admin Approval...</p>
+                <p id="pendingDetails" class="text-xs text-gray-500 mt-3"></p>
+                <div class="mt-4">
+                    <button onclick="window.location.reload()" class="w-full py-2 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-600 transition text-xs">Close & Track Later</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Init Defaults
+        const defaultDate = '2025-11-01';
+        document.getElementById('studyDate').value = defaultDate;
+        document.getElementById('eventDate').value = defaultDate;
+
+        // Global variable to hold current booking details
+        let currentBookingData = {};
+        let currentBookingType = ''; 
+
+        // SCROLL EFFECT LOGIC
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            const studyWrapper = document.getElementById('studyWrapper');
+            const eventWrapper = document.getElementById('eventWrapper');
+            const tabStudy = document.getElementById('tab-study');
+            const tabEvent = document.getElementById('tab-event');
+
+            if(tab === 'study') {
+                studyWrapper.classList.remove('hidden');
+                eventWrapper.classList.add('hidden');
+                tabStudy.classList.add('active');
+                tabEvent.classList.remove('active');
+            } else {
+                studyWrapper.classList.add('hidden');
+                eventWrapper.classList.remove('hidden');
+                tabEvent.classList.add('active');
+                tabStudy.classList.remove('active');
+            }
+        }
+
+        // --- CALCULATION LOGIC ---
+        // 1. Convert "HH:MM" string into total minutes
+        function getMinutes(timeStr) {
+            if (!timeStr) return 0;
+            let [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        // 2. Adjust for Business Hours (1 PM to 1 AM)
+        function getBusinessMinutes(timeStr) {
+            let mins = getMinutes(timeStr);
+            if (mins < 240) mins += 1440; // 1440 mins = 24 hours (for early morning next day)
+            return mins;
+        }
+        
+        // --- NEW: 24h to 12h AM/PM Converter ---
+        function formatTime(time24) {
+            if (!time24) return '';
+            const [hours24, minutes] = time24.split(':');
+            const hours = parseInt(hours24, 10);
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const hours12 = hours % 12 || 12; // Converts 0 (midnight) or 12 (noon) to 12
+            return `${hours12}:${minutes} ${ampm}`;
+        }
+
+        // --- STUDY ROOM FEE CALCULATION ---
+        function calcStudyFee() {
+            // Get values from the inputs
+            const startStr = document.getElementById('studyTime').value;
+            const endStr = document.getElementById('studyEndTime').value;
+            
+            // DOM Elements to update
+            const errorMsg = document.getElementById('timeError');
+            const submitBtn = document.getElementById('studySubmitBtn');
+            const totalDisplay = document.getElementById('studyTotal');
+            const durationDisplay = document.getElementById('durationLabel');
+
+            // Convert to comparable minutes
+            const startVal = getBusinessMinutes(startStr);
+            const endVal = getBusinessMinutes(endStr);
+            
+            // Business Hours in Minutes: Opens 1:00 PM (780 mins), Closes 1:00 AM (1440 mins)
+            const openMins = 780; 
+            const closeMins = 1440;
+
+            // VALIDATION
+            if (startVal < openMins || startVal > closeMins || 
+                endVal < openMins || endVal > closeMins || 
+                endVal <= startVal) {
+                
+                errorMsg.classList.remove('hidden'); 
+                totalDisplay.innerText = "0";
+                durationDisplay.innerText = "--";
+                
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.5";
+                submitBtn.style.cursor = "not-allowed";
+                return;
+            }
+
+            // Valid State
+            errorMsg.classList.add('hidden'); 
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = "1";
+            submitBtn.style.cursor = "pointer";
+
+            // CALCULATION
+            const durationMins = endVal - startVal;
+            const ratePerMin = 50 / 60; // 50 pesos per hour = 0.833 pesos per minute
+            let total = durationMins * ratePerMin * 1; // Base fee PHP 50/hr for 1 person, assumed Study Room for 12 persons at PHP 600/hr
+           
+            // Update UI
+            totalDisplay.innerText = Math.round(total);
+            
+            // Format Label
+            let h = Math.floor(durationMins / 60);
+            let m = durationMins % 60;
+            durationDisplay.innerText = `${h > 0 ? h + ' hrs ' : ''}${m > 0 ? m + ' mins' : ''}`;
+        }
+
+        // --- EVENT FEE CALCULATION ---
+        function calcEventFee() {
+            // Get values from the inputs
+            const startStr = document.getElementById('eventStartTime').value;
+            const endStr = document.getElementById('eventEndTime').value;
+            
+            // DOM Elements to update
+            const submitBtn = document.getElementById('eventSubmit');
+            const totalDisplay = document.getElementById('eventTotal');
+            const durationDisplay = document.getElementById('eventDurationLabel');
+
+            // Convert to comparable minutes
+            const startVal = getBusinessMinutes(startStr);
+            const endVal = getBusinessMinutes(endStr);
+            
+            // Business Hours in Minutes: Opens 1:00 PM (780), Closes 1:00 AM (1440)
+            const openMins = 780; 
+            const closeMins = 1440;
+
+            // VALIDATION
+            if (startVal < openMins || startVal > closeMins || 
+                endVal < openMins || endVal > closeMins || 
+                endVal <= startVal) {
+                
+                totalDisplay.innerText = "0";
+                durationDisplay.innerText = "--";
+                
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.5";
+                submitBtn.style.cursor = "not-allowed";
+                return;
+            }
+
+            // Valid State
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = "1";
+            submitBtn.style.cursor = "pointer";
+
+            // CALCULATION
+            const durationMins = endVal - startVal;
+            const durationHours = durationMins / 60;
+            
+            // Event Logic: PHP 1000/hr for venue + equipment
+            let total = 1000 * durationHours;
+
+            // Equipment Checkboxes - PHP 150/hour
+            if(document.getElementById('projector').checked) total += 150 * durationHours;
+            if(document.getElementById('mic').checked) total += 150 * durationHours;
+
+            // Update UI
+            totalDisplay.innerText = Math.round(total);
+            
+            // Format Label
+            let h = Math.floor(durationMins / 60);
+            let m = durationMins % 60;
+            durationDisplay.innerText = `${h > 0 ? h + ' hrs ' : ''}${m > 0 ? m + ' mins' : ''}`;
+        }
+
+        // --- MODAL FUNCTIONS ---
+        // UPDATED to use formatTime for 12-hour display
+        function openSummaryModal(type, data) {
+            currentBookingType = type;
+            currentBookingData = data;
+
+            const modal = document.getElementById('summaryModal');
+            const title = document.getElementById('summaryTitle');
+            const detailsDiv = document.getElementById('summaryDetails');
+            const totalSpan = document.getElementById('summaryTotal');
+            
+            // --- CONVERT TIME TO AM/PM HERE ---
+            const startTime12 = formatTime(data.start);
+            const endTime12 = formatTime(data.end);
+            // -----------------------------------
+
+            let htmlDetails = '';
+
+            if (type === 'Study') {
+                title.textContent = "Study Room Summary";
+                htmlDetails = `
+                    <p><strong>Name:</strong> ${data.name}</p>
+                    <p><strong>Email:</strong> ${data.email}</p>
+                    <p><strong>Date:</strong> ${data.date}</p>
+                    <p><strong>Time:</strong> ${startTime12} - ${endTime12} (${data.duration})</p>
+                    <p><strong>Notes:</strong> <i>${data.notes || 'None'}</i></p>
+                `;
+            } else { // Event
+                title.textContent = "Event Reservation Summary";
+                htmlDetails = `
+                    <p><strong>Contact:</strong> ${data.name}</p>
+                    <p><strong>Email:</strong> ${data.email}</p>
+                    <p><strong>Event Type:</strong> ${data.eventType}</p>
+                    <p><strong>Guests:</strong> ${data.guests}</p>
+                    <p><strong>Date:</strong> ${data.date}</p>
+                    <p><strong>Time:</strong> ${startTime12} - ${endTime12} (${data.duration})</p>
+                    <p><strong>Equipment:</strong> ${data.equipment || 'None'}</p>
+                    <p><strong>Notes:</strong> <i>${data.notes || 'None'}</i></p>
+                `;
+            }
+
+            detailsDiv.innerHTML = htmlDetails;
+            totalSpan.textContent = data.total;
+            modal.classList.remove('hidden');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('summaryModal').classList.add('hidden');
+        }
+
+
+        function showLoadingModal() {
+            document.getElementById('successModal').classList.add('hidden'); 
+            document.getElementById('pendingDetails').textContent = `Booking on ${currentBookingData.date} for ${currentBookingData.duration} is pending review.`;
+            document.getElementById('loadingModal').classList.remove('hidden');
+        }
+
+        function hideLoadingModal() {
+            document.getElementById('loadingModal').classList.add('hidden');
+        }
+        
+        // This function handles both success (Pending) and explicit failure from the server
+        function showResultModal(type, response) {
+            hideLoadingModal();
+
+            if (response.status === 'success' && response.dbStatus === 'Pending') {
+                // Successful database insertion, awaiting admin approval
+                document.getElementById('pendingDetails').textContent = `Booking #${response.bookingId} on ${currentBookingData.date} for ${currentBookingData.duration} is pending review.`;
+                document.getElementById('loadingModal').classList.remove('hidden'); // Show the persistent loading/pending modal
+                return;
+            } else if (response.status === 'error') {
+                // Server/network error
+                const modal = document.getElementById('successModal');
+                document.getElementById('modalTitle').textContent = "Submission Failed";
+                document.getElementById('modalIcon').className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-500/20 mb-4';
+                document.getElementById('modalIcon').innerHTML = '<i class="fas fa-times text-2xl text-red-500"></i>';
+                document.getElementById('modalDetails').innerHTML = `<p class="text-sm font-bold text-red-300">An error occurred while processing your request. Please try again.</p><p class="text-xs text-gray-400 mt-2">Error: ${response.message || 'Unknown error'}</p>`;
+                document.getElementById('modalButtons').innerHTML = '<button onclick="closeModal()" class="w-full py-3 bg-gold-500 text-black font-bold rounded-lg hover:bg-gold-400 transition text-sm">Close</button>';
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+
+        // --- SUBMISSION HANDLERS ---
+        function handleStudyReservation(e) {
+            e.preventDefault();
+            const form = document.getElementById('studyForm');
+            if (!form.checkValidity()) {
+                 form.reportValidity();
+                 return;
+            }
+            
+            calcStudyFee(); 
+
+            const name = document.getElementById('Name').value.trim();
+            const start = document.getElementById('studyTime').value; 
+            const end = document.getElementById('studyEndTime').value;
+            const email = document.getElementById('studyEmail').value.trim();
+            const date = document.getElementById('studyDate').value;
+            const total = document.getElementById('studyTotal').innerText;
+            const duration = document.getElementById('durationLabel').innerText;
+            const notes = document.getElementById('studyNotes').value.trim();
+
+            const data = { 
+                name, start, end, email, date, total, duration, notes,
+                type: 'Study Room' 
+            };
+            
+            openSummaryModal('Study', data);
+        }
+
+        function handleEventReservation(e) {
+            e.preventDefault();
+            const form = document.getElementById('eventForm');
+            if (!form.checkValidity()) {
+                 form.reportValidity();
+                 return;
+            }
+
+            calcEventFee(); 
+            
+            const name = document.getElementById('eventContactName').value.trim();
+            const start = document.getElementById('eventStartTime').value; 
+            const end = document.getElementById('eventEndTime').value;
+            const email = document.getElementById('eventEmail').value.trim();
+            const date = document.getElementById('eventDate').value;
+            const total = document.getElementById('eventTotal').innerText;
+            const notes = document.getElementById('eventNotes').value.trim();
+            const eventType = document.getElementById('eventType').value;
+            const guests = document.getElementById('guestCount').value;
+            
+            const projector = document.getElementById('projector').checked;
+            const mic = document.getElementById('mic').checked;
+            
+            let equipment = [];
+            if(projector) equipment.push('Projector');
+            if(mic) equipment.push('Mic/Speaker');
+            equipment = equipment.join(' & ');
+
+            const durationLabel = document.getElementById('eventDurationLabel').innerText;
+
+            const data = { 
+                name, start, end, email, date, total, notes, eventType, guests, equipment,
+                duration: durationLabel,
+                type: 'Event' 
+            };
+            
+            openSummaryModal('Event', data);
+        }
+
+        // --- REAL AJAX SUBMISSION FUNCTION (Fixed Error Handling for 405) ---
+        function submitBooking() {
+            closeSummaryModal();
+            showLoadingModal();
+            
+            let notesText = currentBookingData.notes;
+            if (currentBookingType === 'Event') {
+                // Concatenate event-specific details into the notes field for DB storage
+                notesText = `Event Type: ${currentBookingData.eventType} | Guests: ${currentBookingData.guests} | Equipment: ${currentBookingData.equipment} | Notes: ${currentBookingData.notes}`;
+            }
+
+            // Data structure matches the PHP insertion
+            let submissionData = {
+                client_name: currentBookingData.name,
+                client_email: currentBookingData.email,
+                booking_type: currentBookingType === 'Study' ? 'Study Room' : 'Event',
+                booking_date: currentBookingData.date,
+                start_time: currentBookingData.start,
+                end_time: currentBookingData.end,
+                total_fee: currentBookingData.total,
+                notes: notesText,
+                status: 'Pending'
+            };
+
+            // Use URLSearchParams to correctly format the body for PHP's $_POST
+            const params = new URLSearchParams();
+            for (const key in submissionData) {
+              params.append(key, submissionData[key]);
+            }
+
+            fetch('php/submit_booking.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params.toString()
+            })
+            .then(res => {
+              if (!res.ok) {
+                  // If the response is not OK (e.g., 405), try to read the error message from JSON body
+                  // submit_booking.php sends JSON on 405: {"status": "error", "message": "Method Not Allowed"}
+                  return res.json().then(errorData => {
+                      throw new Error(`HTTP Error ${res.status}: ${errorData.message || 'Unknown Server Error'}`);
+                  }).catch(() => {
+                      // Fallback if the body is not readable JSON (e.g., a simple 405 page from web server)
+                      throw new Error(`HTTP Error ${res.status}. Check console for details.`);
+                  });
+              }
+              return res.json();
+            })
+            .then(data => showResultModal(currentBookingType, data))
+            .catch(err => showResultModal(currentBookingType, { status: 'error', message: `Network or Server Error: ${err.message}` }));
+        }
+        // --- END REAL AJAX SUBMISSION FUNCTION ---
+
+        function openTermsModal(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('termsModal').classList.remove('hidden');
+        }
+
+        function closeTermsModal() {
+            document.getElementById('termsModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const termsModal = document.getElementById('termsModal');
+            if (termsModal) {
+                termsModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeTermsModal();
+                    }
+                });
+            }
+            
+            // Initialize Calculators
+            calcStudyFee();
+            calcEventFee();
+        });
+    </script>
+</body>
+</html>
